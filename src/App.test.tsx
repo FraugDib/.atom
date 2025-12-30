@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 import { describe, it, expect } from 'vitest';
 
@@ -9,6 +9,7 @@ describe('App', () => {
     expect(input).toBeInTheDocument();
     expect(input).toHaveAttribute('type', 'email');
     expect(input).toBeRequired();
+    expect(input).toHaveAttribute('placeholder', 'user@example.com');
   });
 
   it('renders delete button with accessible name', () => {
@@ -17,18 +18,22 @@ describe('App', () => {
     expect(button).toBeInTheDocument();
   });
 
-  it('shows loading state when deleting', () => {
+  it('shows loading state and then success state when deleting', async () => {
     render(<App />);
     const button = screen.getByRole('button', { name: /delete project/i });
     fireEvent.click(button);
 
-    // Check if button is disabled
+    // Check if button is disabled and showing loading state
     expect(button).toBeDisabled();
-
-    // Check if spinner/loading indicator is present (by checking if the delete icon is gone or checking content)
-    // In our component, we switch the content.
-    // The loading span has role="status" and aria-label="Deleting"
     const spinner = screen.getByRole('status', { name: /deleting/i });
     expect(spinner).toBeInTheDocument();
+
+    // Wait for the success state (2 seconds timeout in component)
+    await waitFor(() => {
+        const successButton = screen.getByRole('button', { name: /project deleted/i });
+        expect(successButton).toBeInTheDocument();
+        expect(successButton).toBeDisabled();
+        expect(screen.getByText('✅')).toBeInTheDocument();
+    }, { timeout: 2500 });
   });
 });

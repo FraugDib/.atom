@@ -3,10 +3,14 @@ import React, { useState } from 'react';
 function App() {
   const [email, setEmail] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
 
   const handleDelete = () => {
     setIsDeleting(true);
-    setTimeout(() => setIsDeleting(false), 2000);
+    setTimeout(() => {
+      setIsDeleting(false);
+      setIsDeleted(true);
+    }, 2000);
   };
 
   return (
@@ -24,6 +28,7 @@ function App() {
             id="email"
             type="email"
             required
+            placeholder="user@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
@@ -37,15 +42,15 @@ function App() {
 
         {/* ✅ GOOD: Accessible button with ARIA label */}
         <button
-          aria-label="Delete project"
+          aria-label={isDeleted ? "Project deleted" : "Delete project"}
           onClick={handleDelete}
-          disabled={isDeleting}
+          disabled={isDeleting || isDeleted}
           style={{
-            backgroundColor: '#fee2e2',
-            border: '1px solid #ef4444',
+            backgroundColor: isDeleted ? '#dcfce7' : '#fee2e2',
+            border: `1px solid ${isDeleted ? '#22c55e' : '#ef4444'}`,
             borderRadius: '4px',
             padding: '8px 12px',
-            cursor: isDeleting ? 'not-allowed' : 'pointer',
+            cursor: (isDeleting || isDeleted) ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -55,6 +60,8 @@ function App() {
         >
           {isDeleting ? (
             <span role="status" aria-label="Deleting">⏳</span>
+          ) : isDeleted ? (
+             <span role="img" aria-hidden="true">✅</span>
           ) : (
             <span role="img" aria-hidden="true">🗑️</span>
           )}
