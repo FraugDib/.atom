@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import App from './App';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 describe('App', () => {
   it('renders email input with accessible label', () => {
@@ -17,18 +17,50 @@ describe('App', () => {
     expect(button).toBeInTheDocument();
   });
 
-  it('shows loading state when deleting', () => {
+  it('requires confirmation before deleting', () => {
+    vi.useFakeTimers();
     render(<App />);
     const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click: Enter confirmation mode
     fireEvent.click(button);
 
-    // Check if button is disabled
-    expect(button).toBeDisabled();
+    // Check if label changed
+    expect(button).toHaveAttribute('aria-label', 'Confirm deletion');
+    expect(screen.getByText('Confirm?')).toBeInTheDocument();
 
-    // Check if spinner/loading indicator is present (by checking if the delete icon is gone or checking content)
-    // In our component, we switch the content.
-    // The loading span has role="status" and aria-label="Deleting"
+    // Button should not be disabled yet
+    expect(button).not.toBeDisabled();
+
+    // Second click: Actually delete
+    fireEvent.click(button);
+
+    // Now it should be loading
+    expect(button).toBeDisabled();
     const spinner = screen.getByRole('status', { name: /deleting/i });
     expect(spinner).toBeInTheDocument();
+
+    vi.useRealTimers();
+  });
+
+  it('auto-cancels confirmation after timeout', () => {
+    vi.useFakeTimers();
+    render(<App />);
+    const button = screen.getByRole('button', { name: /delete project/i });
+
+    // Click to confirm
+    fireEvent.click(button);
+    expect(screen.getByText('Confirm?')).toBeInTheDocument();
+
+    // Fast-forward time (3s)
+    act(() => {
+        vi.advanceTimersByTime(3000);
+    });
+
+    // Should revert to original state
+    expect(button).toHaveAttribute('aria-label', 'Delete project');
+    expect(screen.queryByText('Confirm?')).not.toBeInTheDocument();
+
+    vi.useRealTimers();
   });
 });
