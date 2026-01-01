@@ -17,17 +17,27 @@ describe('App', () => {
     expect(button).toBeInTheDocument();
   });
 
-  it('shows loading state when deleting', () => {
+  it('requires confirmation before deleting', () => {
     render(<App />);
     const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click - should trigger confirmation state
+    fireEvent.click(button);
+
+    // Check if button text/label changed
+    expect(button).toHaveTextContent(/confirm/i);
+    expect(button).toHaveAttribute('aria-label', 'Confirm deletion');
+
+    // Should NOT be disabled yet
+    expect(button).not.toBeDisabled();
+
+    // Second click - should trigger delete
     fireEvent.click(button);
 
     // Check if button is disabled
     expect(button).toBeDisabled();
 
-    // Check if spinner/loading indicator is present (by checking if the delete icon is gone or checking content)
-    // In our component, we switch the content.
-    // The loading span has role="status" and aria-label="Deleting"
+    // Check if spinner/loading indicator is present
     const spinner = screen.getByRole('status', { name: /deleting/i });
     expect(spinner).toBeInTheDocument();
   });
