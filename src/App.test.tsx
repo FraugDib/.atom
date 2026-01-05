@@ -20,6 +20,13 @@ describe('App', () => {
   it('shows loading state when deleting', () => {
     render(<App />);
     const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click: Ask for confirmation
+    fireEvent.click(button);
+    expect(button).toHaveTextContent(/Confirm/i);
+    expect(button).not.toBeDisabled();
+
+    // Second click: Actually delete
     fireEvent.click(button);
 
     // Check if button is disabled
@@ -30,5 +37,21 @@ describe('App', () => {
     // The loading span has role="status" and aria-label="Deleting"
     const spinner = screen.getByRole('status', { name: /deleting/i });
     expect(spinner).toBeInTheDocument();
+  });
+
+  it('resets confirmation on blur', () => {
+    render(<App />);
+    const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click: Ask for confirmation
+    fireEvent.click(button);
+    expect(button).toHaveTextContent(/Confirm/i);
+
+    // Blur the button
+    fireEvent.blur(button);
+
+    // Should reset to initial state
+    expect(button).not.toHaveTextContent(/Confirm/i);
+    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument();
   });
 });
