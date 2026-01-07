@@ -3,10 +3,24 @@ import React, { useState } from 'react';
 function App() {
   const [email, setEmail] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const handleDelete = () => {
-    setIsDeleting(true);
-    setTimeout(() => setIsDeleting(false), 2000);
+    if (confirming) {
+      setIsDeleting(true);
+      setConfirming(false);
+      setTimeout(() => setIsDeleting(false), 2000);
+    } else {
+      setConfirming(true);
+    }
+  };
+
+  const handleBlur = () => {
+    // Small delay to allow click event to propagate if user clicked something else
+    // But for this button, immediate reset on blur is usually desired behavior for "inline confirmation"
+    // However, if we click the button itself while it is confirming, the blur happens? No.
+    // The blur happens if we click OUTSIDE the button.
+    setConfirming(false);
   };
 
   return (
@@ -37,8 +51,9 @@ function App() {
 
         {/* ✅ GOOD: Accessible button with ARIA label */}
         <button
-          aria-label="Delete project"
+          aria-label={confirming ? "Confirm deletion" : "Delete project"}
           onClick={handleDelete}
+          onBlur={handleBlur}
           disabled={isDeleting}
           style={{
             backgroundColor: '#fee2e2',
@@ -49,12 +64,15 @@ function App() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            minWidth: '40px',
-            minHeight: '40px'
+            minWidth: confirming ? '100px' : '40px',
+            minHeight: '40px',
+            transition: 'all 0.2s ease'
           }}
         >
           {isDeleting ? (
             <span role="status" aria-label="Deleting">⏳</span>
+          ) : confirming ? (
+            <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '14px' }}>Confirm?</span>
           ) : (
             <span role="img" aria-hidden="true">🗑️</span>
           )}

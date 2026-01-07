@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import App from './App';
 import { describe, it, expect } from 'vitest';
 
@@ -17,18 +17,44 @@ describe('App', () => {
     expect(button).toBeInTheDocument();
   });
 
-  it('shows loading state when deleting', () => {
+  it('requires two clicks to delete and shows confirmation state', () => {
     render(<App />);
     const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click: Enter confirmation state
     fireEvent.click(button);
 
-    // Check if button is disabled
+    // Check if label changed
+    expect(button).toHaveAccessibleName(/confirm deletion/i);
+    // Check if content changed to "Confirm?"
+    expect(screen.getByText(/confirm\?/i)).toBeInTheDocument();
+    // Should NOT be disabled yet
+    expect(button).not.toBeDisabled();
+
+    // Second click: Execute delete
+    fireEvent.click(button);
+
+    // Check if button is disabled (loading state)
     expect(button).toBeDisabled();
 
-    // Check if spinner/loading indicator is present (by checking if the delete icon is gone or checking content)
-    // In our component, we switch the content.
-    // The loading span has role="status" and aria-label="Deleting"
+    // Check if spinner/loading indicator is present
     const spinner = screen.getByRole('status', { name: /deleting/i });
     expect(spinner).toBeInTheDocument();
+  });
+
+  it('resets confirmation on blur', () => {
+    render(<App />);
+    const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click: Enter confirmation state
+    fireEvent.click(button);
+    expect(screen.getByText(/confirm\?/i)).toBeInTheDocument();
+
+    // Blur the button (simulate clicking away)
+    fireEvent.blur(button);
+
+    // Should revert to original state
+    expect(button).toHaveAccessibleName(/delete project/i);
+    expect(screen.queryByText(/confirm\?/i)).not.toBeInTheDocument();
   });
 });
