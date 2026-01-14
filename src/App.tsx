@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 function App() {
   const [email, setEmail] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const handleDelete = () => {
-    setIsDeleting(true);
-    setTimeout(() => setIsDeleting(false), 2000);
+    if (isConfirming) {
+      setIsDeleting(true);
+      setTimeout(() => {
+        setIsDeleting(false);
+        setIsConfirming(false);
+      }, 2000);
+    } else {
+      setIsConfirming(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setIsConfirming(false);
   };
 
   return (
@@ -37,12 +49,16 @@ function App() {
 
         {/* ✅ GOOD: Accessible button with ARIA label */}
         <button
-          aria-label="Delete project"
+          aria-label={isConfirming ? "Confirm delete project" : "Delete project"}
           onClick={handleDelete}
+          onBlur={handleBlur}
           disabled={isDeleting}
           style={{
-            backgroundColor: '#fee2e2',
-            border: '1px solid #ef4444',
+            backgroundColor: isConfirming ? '#fee2e2' : '#f3f4f6',
+            borderColor: isConfirming ? '#ef4444' : '#d1d5db',
+            color: isConfirming ? '#991b1b' : '#374151',
+            borderWidth: '1px',
+            borderStyle: 'solid',
             borderRadius: '4px',
             padding: '8px 12px',
             cursor: isDeleting ? 'not-allowed' : 'pointer',
@@ -50,11 +66,15 @@ function App() {
             alignItems: 'center',
             justifyContent: 'center',
             minWidth: '40px',
-            minHeight: '40px'
+            minHeight: '40px',
+            fontWeight: 'bold',
+            transition: 'all 0.2s'
           }}
         >
           {isDeleting ? (
             <span role="status" aria-label="Deleting">⏳</span>
+          ) : isConfirming ? (
+            <span>Confirm?</span>
           ) : (
             <span role="img" aria-hidden="true">🗑️</span>
           )}
