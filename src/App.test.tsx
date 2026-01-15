@@ -20,6 +20,12 @@ describe('App', () => {
   it('shows loading state when deleting', () => {
     render(<App />);
     const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click - confirm
+    fireEvent.click(button);
+    expect(screen.getByText(/confirm/i)).toBeInTheDocument();
+
+    // Second click - delete
     fireEvent.click(button);
 
     // Check if button is disabled
