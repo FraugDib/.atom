@@ -3,10 +3,22 @@ import React, { useState } from 'react';
 function App() {
   const [email, setEmail] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const handleDelete = () => {
-    setIsDeleting(true);
-    setTimeout(() => setIsDeleting(false), 2000);
+    if (isConfirming) {
+      setIsConfirming(false);
+      setIsDeleting(true);
+      setTimeout(() => setIsDeleting(false), 2000);
+    } else {
+      setIsConfirming(true);
+    }
+  };
+
+  const handleBlur = () => {
+    if (isConfirming) {
+      setIsConfirming(false);
+    }
   };
 
   return (
@@ -37,11 +49,12 @@ function App() {
 
         {/* ✅ GOOD: Accessible button with ARIA label */}
         <button
-          aria-label="Delete project"
+          aria-label={isConfirming ? "Confirm deletion" : "Delete project"}
           onClick={handleDelete}
+          onBlur={handleBlur}
           disabled={isDeleting}
           style={{
-            backgroundColor: '#fee2e2',
+            backgroundColor: isConfirming ? '#fecaca' : '#fee2e2',
             border: '1px solid #ef4444',
             borderRadius: '4px',
             padding: '8px 12px',
@@ -50,11 +63,14 @@ function App() {
             alignItems: 'center',
             justifyContent: 'center',
             minWidth: '40px',
-            minHeight: '40px'
+            minHeight: '40px',
+            transition: 'all 0.2s'
           }}
         >
           {isDeleting ? (
             <span role="status" aria-label="Deleting">⏳</span>
+          ) : isConfirming ? (
+            <span style={{ fontWeight: 'bold', color: '#b91c1c', fontSize: '14px' }}>Confirm?</span>
           ) : (
             <span role="img" aria-hidden="true">🗑️</span>
           )}
