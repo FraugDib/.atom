@@ -17,9 +17,37 @@ describe('App', () => {
     expect(button).toBeInTheDocument();
   });
 
-  it('shows loading state when deleting', () => {
+  it('shows confirmation state on first click', () => {
     render(<App />);
     const button = screen.getByRole('button', { name: /delete project/i });
+    fireEvent.click(button);
+
+    // Should now show "Confirm?"
+    expect(screen.getByText('Confirm?')).toBeInTheDocument();
+    // Accessible label should change
+    expect(button).toHaveAttribute('aria-label', 'Confirm delete project');
+  });
+
+  it('resets confirmation state on blur', () => {
+    render(<App />);
+    const button = screen.getByRole('button', { name: /delete project/i });
+    fireEvent.click(button);
+    expect(screen.getByText('Confirm?')).toBeInTheDocument();
+
+    fireEvent.blur(button);
+    expect(screen.queryByText('Confirm?')).not.toBeInTheDocument();
+    expect(button).toHaveAttribute('aria-label', 'Delete project');
+  });
+
+  it('shows loading state when deleting (after confirmation)', () => {
+    render(<App />);
+    const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click -> Confirm
+    fireEvent.click(button);
+    expect(screen.getByText('Confirm?')).toBeInTheDocument();
+
+    // Second click -> Delete
     fireEvent.click(button);
 
     // Check if button is disabled
