@@ -17,18 +17,55 @@ describe('App', () => {
     expect(button).toBeInTheDocument();
   });
 
-  it('shows loading state when deleting', () => {
+  it('requires confirmation before deleting', () => {
     render(<App />);
     const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click
+    fireEvent.click(button);
+
+    // Should show confirmation text
+    expect(screen.getByText("Confirm?")).toBeInTheDocument();
+    // Should have new aria-label
+    expect(button).toHaveAttribute('aria-label', 'Confirm deletion');
+    // Should NOT be disabled yet
+    expect(button).not.toBeDisabled();
+    // Should NOT show spinner
+    expect(screen.queryByRole('status', { name: /deleting/i })).not.toBeInTheDocument();
+  });
+
+  it('shows loading state when confirmed', () => {
+    render(<App />);
+    const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click: Ask for confirmation
+    fireEvent.click(button);
+    expect(screen.getByText("Confirm?")).toBeInTheDocument();
+
+    // Second click: Actually delete
     fireEvent.click(button);
 
     // Check if button is disabled
     expect(button).toBeDisabled();
 
-    // Check if spinner/loading indicator is present (by checking if the delete icon is gone or checking content)
-    // In our component, we switch the content.
-    // The loading span has role="status" and aria-label="Deleting"
+    // Check if spinner/loading indicator is present
     const spinner = screen.getByRole('status', { name: /deleting/i });
     expect(spinner).toBeInTheDocument();
+  });
+
+  it('resets confirmation state on blur', () => {
+    render(<App />);
+    const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click
+    fireEvent.click(button);
+    expect(screen.getByText("Confirm?")).toBeInTheDocument();
+
+    // Blur
+    fireEvent.blur(button);
+
+    // Should reset to original state
+    expect(screen.queryByText("Confirm?")).not.toBeInTheDocument();
+    expect(button).toHaveAttribute('aria-label', 'Delete project');
   });
 });
