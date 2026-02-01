@@ -17,18 +17,39 @@ describe('App', () => {
     expect(button).toBeInTheDocument();
   });
 
-  it('shows loading state when deleting', () => {
+  it('shows loading state when deleting (two-step)', () => {
     render(<App />);
     const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click: Enter confirmation mode
+    fireEvent.click(button);
+    expect(screen.getByRole('button', { name: /confirm deletion/i })).toBeInTheDocument();
+    expect(screen.getByText('Confirm?')).toBeInTheDocument();
+
+    // Second click: Confirm and delete
     fireEvent.click(button);
 
     // Check if button is disabled
     expect(button).toBeDisabled();
 
-    // Check if spinner/loading indicator is present (by checking if the delete icon is gone or checking content)
-    // In our component, we switch the content.
-    // The loading span has role="status" and aria-label="Deleting"
+    // Check if spinner/loading indicator is present
     const spinner = screen.getByRole('status', { name: /deleting/i });
     expect(spinner).toBeInTheDocument();
+  });
+
+  it('resets confirmation state on blur', () => {
+    render(<App />);
+    const button = screen.getByRole('button', { name: /delete project/i });
+
+    // Click to confirm
+    fireEvent.click(button);
+    expect(screen.getByText('Confirm?')).toBeInTheDocument();
+
+    // Blur to reset
+    fireEvent.blur(button);
+
+    // Check if reset to initial state
+    expect(screen.getByRole('button', { name: /delete project/i })).toBeInTheDocument();
+    expect(screen.queryByText('Confirm?')).not.toBeInTheDocument();
   });
 });
