@@ -17,9 +17,48 @@ describe('App', () => {
     expect(button).toBeInTheDocument();
   });
 
+  it('requires confirmation before deleting', () => {
+    render(<App />);
+    const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click
+    fireEvent.click(button);
+
+    // Should show "Confirm?"
+    expect(screen.getByText(/confirm/i)).toBeInTheDocument();
+
+    // Should have updated aria-label
+    expect(button).toHaveAttribute('aria-label', 'Confirm delete project');
+
+    // Should NOT be disabled or loading yet
+    expect(button).not.toBeDisabled();
+    expect(screen.queryByRole('status', { name: /deleting/i })).not.toBeInTheDocument();
+  });
+
+  it('resets confirmation on blur', () => {
+    render(<App />);
+    const button = screen.getByRole('button', { name: /delete project/i });
+
+    // First click
+    fireEvent.click(button);
+    expect(screen.getByText(/confirm/i)).toBeInTheDocument();
+
+    // Blur
+    fireEvent.blur(button);
+
+    // Should reset to original state
+    expect(screen.queryByText(/confirm/i)).not.toBeInTheDocument();
+    expect(button).toHaveAttribute('aria-label', 'Delete project');
+  });
+
   it('shows loading state when deleting', () => {
     render(<App />);
     const button = screen.getByRole('button', { name: /delete project/i });
+
+    // Click 1: Confirm
+    fireEvent.click(button);
+
+    // Click 2: Delete
     fireEvent.click(button);
 
     // Check if button is disabled
